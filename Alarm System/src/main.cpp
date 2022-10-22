@@ -14,115 +14,56 @@
 // digital input pin definitions 
 #define PIN_PIR D5 
 #define PIN_BUTTON D6
+#define STEP_ZERO 0
+#define STEP_ONE 125
+#define STEP_TWO 250
+#define STEP_THREE 375
+#define STEP_FOUR 500
+#define STEP_FIVE 675
+#define STEP_SIX 750
+#define STEP_SEVEN 875
 
-int brightness = 255;
 bool motionDetected = false;
+unsigned long startTime;
+unsigned long elapsedTime;
 
-void stageOne(){
-  if (digitalRead(PIN_PIR)){
-    digitalWrite(LED_BUILTIN,LOW);
-    delay(10000);
-    digitalWrite(LED_BUILTIN,HIGH);
-    delay(100);
-  }
-}
-
-void stageTwo(){
-  if (digitalRead(PIN_PIR)){
-    int i;
-
-    for (i=0;i<40;i++){
-      digitalWrite(LED_BUILTIN,LOW);
-      delay(125);
-      digitalWrite(LED_BUILTIN,HIGH);
-      delay(125);
-    }
-  }
-}
-
-void stageThree(){
-  if (digitalRead(PIN_PIR) && !motionDetected){
-    int i;
-
-    for (i=0;i<40;i++){
-      digitalWrite(LED_BUILTIN,HIGH);
-      delay(125);
-      digitalWrite(LED_BUILTIN,LOW);
-      delay(125);
-    }
-    motionDetected = true;
-  }
-}
-
-void stageFour(){
-  if (digitalRead(PIN_PIR) && !motionDetected){
-    unsigned long startTime = millis();
-    unsigned long endTime = startTime;
-
-    motionDetected = true;
-    while (endTime - startTime <= 5000)
-    { 
-      if (digitalRead(PIN_BUTTON) == 0)
-      {
-        motionDetected = false;
-        digitalWrite(LED_BUILTIN,HIGH);
-        break;
-      }
-
-      if ((endTime - startTime)%1000 == 0 
-      || (endTime - startTime)%1000 == 250 
-      || (endTime - startTime)%1000 == 500 
-      || (endTime - startTime)%1000 == 750)
-      {
-        digitalWrite(LED_BUILTIN,LOW);
-      }
-      if ((endTime - startTime)%1000 == 125 
-      || (endTime - startTime)%1000 == 375 
-      || (endTime - startTime)%1000 == 625 
-      || (endTime - startTime)%1000 == 875)
-      {
-        digitalWrite(LED_BUILTIN,HIGH);
-      }
-      
-      endTime = millis();
-      Serial.println((endTime - startTime));
-    }
-    
-  }
-}
-
+// *********************************************************** 
+// Flashes built in LED 4 times per second for 10 seconds if movement is detected
+// Button will deactivate the blinking light 
+// 
 void stageFive(){
   if (digitalRead(PIN_PIR) && !motionDetected){
-    unsigned long startTime = millis();
-    unsigned long endTime = startTime;
-
+    startTime = millis();
+    elapsedTime = startTime;
     motionDetected = true;
-    while (endTime - startTime <= 10000)
+
+    while (elapsedTime - startTime <= 10000)
     { 
       if (digitalRead(PIN_BUTTON) == 0)
       {
-        digitalWrite(LED_BUILTIN,HIGH);
+        digitalWrite(LED_BUILTIN,HIGH); // turns LED off
         break;
       }
 
-      if ((endTime - startTime)%1000 == 0 
-      || (endTime - startTime)%1000 == 250 
-      || (endTime - startTime)%1000 == 500 
-      || (endTime - startTime)%1000 == 750)
+      // turns LED on four times a second
+      if ((elapsedTime - startTime)%1000 == STEP_ZERO 
+      || (elapsedTime - startTime)%1000 == STEP_TWO 
+      || (elapsedTime - startTime)%1000 == STEP_FOUR 
+      || (elapsedTime - startTime)%1000 == STEP_SIX)
       {
         digitalWrite(LED_BUILTIN,LOW); // turn LED on
       }
 
-      if ((endTime - startTime)%1000 == 125 
-      || (endTime - startTime)%1000 == 375 
-      || (endTime - startTime)%1000 == 625 
-      || (endTime - startTime)%1000 == 875)
+      // turns LED off 4 times a second
+      if ((elapsedTime - startTime)%1000 == STEP_ONE
+      || (elapsedTime - startTime)%1000 == STEP_THREE
+      || (elapsedTime - startTime)%1000 == STEP_FIVE
+      || (elapsedTime - startTime)%1000 == STEP_SEVEN)
       {
         digitalWrite(LED_BUILTIN,HIGH); // turn LED off
       }
       
-      endTime = millis();
-      Serial.println((endTime - startTime));
+      elapsedTime = millis(); // sets new elapsedTime
     }
   }
   else if (motionDetected && digitalRead(PIN_BUTTON) == 0)
@@ -153,14 +94,5 @@ void setup() {
  
 // ************************************************************* 
 void loop() { 
-
-  // stageOne();
-
-  // stageTwo();
-
-  // stageThree();
-
-  // stageFour();
-
   stageFive();
 } 
